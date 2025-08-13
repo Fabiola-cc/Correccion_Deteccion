@@ -35,10 +35,8 @@ public class checksum_emisor {
     private String paddString(String mensaje, int deseado) {
         int size_mensaje = mensaje.length();
 
-        int missing = size_mensaje % deseado;
-        missing = (missing != 0) ? deseado - missing : 0;
-
-        if (missing != 0) {
+        if (size_mensaje % deseado != 0) {
+            int missing = deseado - size_mensaje % deseado;
             StringBuilder addition = new StringBuilder();
             for (int i = 0; i < missing; i++) {
                 addition.append('0');
@@ -84,17 +82,49 @@ public class checksum_emisor {
 
         // 1. Solicitar un mensaje en binario. (i.e.: “110101”)
         System.out.println("Bienvenido. Esta es una simulación de Checksum Fletcher");
-        System.out.println("Para empezar elige el tipo con el que quieres trabajar. (Escribe 1, 2 o 3)");
-        System.out.println("1. Fletcher-8\n2. Fletcher-16\n3. Fletcher-32");
-        int eleccion = sc.nextInt();
-        sc.nextLine();
+
+        int eleccion = 0;
+        boolean invalid = true;
+        int tries = 0;
+
+        while (invalid) {
+            if (tries > 3) {
+                System.err.println("Lo lamento, has intentado más de tres veces.");
+                System.err.println("Vuelve a ejecutar el código para empezar de nuevo.");
+                sc.close();
+                return; // rompe el main
+            }
+
+            System.out.println("\nElige el tipo con el que quieres trabajar. (Escribe 1, 2 o 3)");
+            System.out.println("1. Fletcher-8\n2. Fletcher-16\n3. Fletcher-32");
+
+            if (sc.hasNextInt()) {
+                eleccion = sc.nextInt();
+                if (eleccion < 1 || eleccion > 3) {
+                    System.err.println("Error. Debes elegir un número entre 1 y 3.");
+                    tries++;
+                } else {
+                    invalid = false;
+                }
+            } else {
+                System.err.println("Entrada inválida. Debes escribir un número.");
+                sc.next(); // descartar entrada inválida
+                tries++;
+            }
+        }
 
         // Inicializar recurso
         checksum_emisor emisor = new checksum_emisor(eleccion);
 
         System.out.println(String.format("\nGenial, estamos usando Fletcher-%d.", emisor.tipo));
-        System.out.println("Ahora escribe el mensaje que quieres enviar (i.e.: “110101”):");
+        System.out.println("Ahora escribe el mensaje que quieres enviar (i.e.: 110101):");
         String mensaje = sc.nextLine();
+
+        if (!mensaje.matches("[01]+")) {
+            System.err.println("Error: El mensaje debe ser binario.");
+            sc.close();
+            return; // sale del main
+        }
 
         // 2. Ejecutar el algoritmo
         String resultado = emisor.checksum(mensaje);
