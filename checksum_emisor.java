@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class checksum_emisor {
     int tipo; // fletcher - 8,16,32
@@ -8,16 +9,7 @@ public class checksum_emisor {
     int sum2;
 
     public checksum_emisor(int eleccion) {
-        get_tipo(eleccion);
-    }
-
-    /**
-     * asignar el valor a tipo según la elección del usuario
-     * y darle un valor a n según el tipo escogido
-     * 
-     * @param eleccion
-     */
-    private void get_tipo(int eleccion) {
+        // Asignar valores a tipo,n y sums según la elección del usuario
         if (eleccion == 1) {
             tipo = 8;
             n = 4;
@@ -43,7 +35,9 @@ public class checksum_emisor {
     private String paddString(String mensaje, int deseado) {
         int size_mensaje = mensaje.length();
 
-        int missing = deseado - (size_mensaje % deseado);
+        int missing = size_mensaje % deseado;
+        missing = (missing != 0) ? deseado - missing : 0;
+
         if (missing != 0) {
             StringBuilder addition = new StringBuilder();
             for (int i = 0; i < missing; i++) {
@@ -86,8 +80,30 @@ public class checksum_emisor {
     }
 
     public static void main(String[] args) {
-        checksum_emisor emisor = new checksum_emisor(2);
-        System.out.println(emisor.checksum("00000001000000100000001100000100"));
+        Scanner sc = new Scanner(System.in);
+
+        // 1. Solicitar un mensaje en binario. (i.e.: “110101”)
+        System.out.println("Bienvenido. Esta es una simulación de Checksum Fletcher");
+        System.out.println("Para empezar elige el tipo con el que quieres trabajar. (Escribe 1, 2 o 3)");
+        System.out.println("1. Fletcher-8\n2. Fletcher-16\n3. Fletcher-32");
+        int eleccion = sc.nextInt();
+        sc.nextLine();
+
+        // Inicializar recurso
+        checksum_emisor emisor = new checksum_emisor(eleccion);
+
+        System.out.println(String.format("\nGenial, estamos usando Fletcher-%d.", emisor.tipo));
+        System.out.println("Ahora escribe el mensaje que quieres enviar (i.e.: “110101”):");
+        String mensaje = sc.nextLine();
+
+        // 2. Ejecutar el algoritmo
+        String resultado = emisor.checksum(mensaje);
+
+        // 3. Devolver el mensaje en binario concatenado dicha información
+        System.out.println("\nEl resultado de checksum es:");
+        System.out.println(resultado);
+
+        sc.close();
     }
 
 }
