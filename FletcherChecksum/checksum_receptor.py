@@ -51,10 +51,10 @@ class checksum_receptor:  # Definición de la clase
 
         # comparar y notificar
         if(checksum_compare != calculated_checksum):
-            print("Hay un error en el mensaje recibido. El mensaje se descarta")
+            return True, message
         else:
-            print("\nNo se detectaron errores.")
-            print(f"El mensaje es {message}")
+            return False, message
+        
 
 if __name__ == "__main__":
     print("Bienvenido. Esta es una simulación del RECEPTOR de Checksum Fletcher")
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             print("Entrada inválida. Debes escribir un número.", file=sys.stderr)
             tries += 1
     
-    receptor =checksum_receptor(eleccion)
+    receptor = checksum_receptor(eleccion)
     
     print(f"\nGenial, estamos usando Fletcher-{receptor.tipo}.")
     print("Ahora la respuesta del emisor (i.e.: 110101):")
@@ -92,4 +92,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # 2. Ejecutar el algoritmo y mostrar resultado
-    receptor.verify_checksum(response)
+    exists, msg = receptor.verify_checksum(response)
+
+    if(exists): #Existe un error
+        print("Hay un error en el mensaje recibido. El mensaje se descarta")
+    else:
+        print("\nNo se detectaron errores.")
+        print(f"El mensaje es {msg}")

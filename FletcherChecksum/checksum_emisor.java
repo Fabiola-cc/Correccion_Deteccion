@@ -1,3 +1,5 @@
+package FletcherChecksum;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -75,6 +77,64 @@ public class checksum_emisor {
         checksum_result = paddString(checksum_result, tipo);
 
         return checksum_result;
+    }
+
+    public static String[] useChecksumEmisor(String mensaje) {
+        Scanner sc = new Scanner(System.in);
+
+        int eleccion = 0;
+        boolean invalid = true;
+        int tries = 0;
+
+        while (invalid) {
+            if (tries > 3) {
+                System.err.println("Lo lamento, has intentado más de tres veces.");
+                System.err.println("Vuelve a ejecutar el código para empezar de nuevo.");
+                sc.close();
+                return new String[] { "-1" };
+            }
+
+            System.out.println("\nElige el tipo con el que quieres trabajar. (Escribe 1, 2 o 3)");
+            System.out.println("1. Fletcher-8\n2. Fletcher-16\n3. Fletcher-32");
+
+            if (sc.hasNextInt()) {
+                eleccion = sc.nextInt();
+                if (eleccion < 1 || eleccion > 3) {
+                    System.err.println("Error. Debes elegir un número entre 1 y 3.");
+                    tries++;
+                } else {
+                    invalid = false;
+                }
+            } else {
+                System.err.println("Entrada inválida. Debes escribir un número.");
+                sc.next(); // descartar entrada inválida
+                tries++;
+            }
+        }
+        sc.nextLine();
+
+        // Inicializar recurso
+        checksum_emisor emisor = new checksum_emisor(eleccion);
+
+        System.out.println(String.format("\nGenial, estamos usando Fletcher-%d.", emisor.tipo));
+        if (!mensaje.matches("[01]+")) {
+            System.err.println("Error: El mensaje debe ser binario.");
+            sc.close();
+            return new String[] { "-1" };
+        }
+
+        // 2. Ejecutar el algoritmo
+        String resultado = emisor.checksum(mensaje);
+
+        // 3. Devolver el mensaje en binario concatenado dicha información
+        System.out.println("\nEl resultado de checksum es:");
+        System.out.println(resultado);
+
+        System.out.println("\nEl mensaje para el receptor:");
+        System.out.println(mensaje + resultado);
+
+        sc.close();
+        return new String[] { String.valueOf(eleccion), (mensaje + resultado) };
     }
 
     public static void main(String[] args) {
