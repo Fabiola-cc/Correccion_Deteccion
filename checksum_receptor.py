@@ -28,7 +28,7 @@ class checksum_receptor:  # Definición de la clase
             self.sum2 = (self.sum1 + self.sum2) % toMod
         
         checksum = (self.sum2 << self.n) | self.sum1
-        return format(checksum, 'b')
+        return checksum
         
 
     def verify_checksum(self, given):
@@ -44,7 +44,7 @@ class checksum_receptor:  # Definición de la clase
         # dividir mensaje y checksum
         message_size = len(given) - self.tipo # tamaño del mensaje original sin checksum
         message = given[:message_size] # mensaje original
-        checksum_compare = given[-self.tipo:] # checksum enviado
+        checksum_compare = int(given[-self.tipo:], 2) # checksum enviado
 
         # calcular el checksum
         calculated_checksum = self.checksum(message)
@@ -53,7 +53,7 @@ class checksum_receptor:  # Definición de la clase
         if(checksum_compare != calculated_checksum):
             print("Hay un error en el mensaje recibido. El mensaje se descarta")
         else:
-            print("No se detectaron errores.")
+            print("\nNo se detectaron errores.")
             print(f"El mensaje es {message}")
 
 if __name__ == "__main__":

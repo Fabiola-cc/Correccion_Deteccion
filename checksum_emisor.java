@@ -112,6 +112,7 @@ public class checksum_emisor {
                 tries++;
             }
         }
+        sc.nextLine();
 
         // Inicializar recurso
         checksum_emisor emisor = new checksum_emisor(eleccion);
@@ -132,6 +133,9 @@ public class checksum_emisor {
         // 3. Devolver el mensaje en binario concatenado dicha información
         System.out.println("\nEl resultado de checksum es:");
         System.out.println(resultado);
+
+        System.out.println("\nEl mensaje para el receptor:");
+        System.out.println(mensaje + resultado);
 
         sc.close();
     }
