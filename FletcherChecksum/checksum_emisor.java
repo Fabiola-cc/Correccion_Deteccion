@@ -140,7 +140,7 @@ public class checksum_emisor {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        // 1. Solicitar un mensaje en binario. (i.e.: “110101”)
+        // 1. Solicitar un mensaje en binario. (i.e.: 110101)
         System.out.println("Bienvenido. Esta es una simulación de Checksum Fletcher");
 
         int eleccion = 0;
