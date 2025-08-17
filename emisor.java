@@ -1,3 +1,5 @@
+import FletcherChecksum.checksum_emisor;
+import Hamming.Hamming_emisor; // Importar la clase de Hamming
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,7 +8,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Random;
 import java.util.Scanner;
-import FletcherChecksum.checksum_emisor;
 
 public class emisor {
     public static void sendMessage(String verified_message, int scheme_type, int fletcher_type) {
@@ -116,8 +117,15 @@ public class emisor {
         int fletcherT = -1;
         // Calcular integridad según el esquema elegido
         if (eleccion == 1) { // Hamming
-            // toSend = añadir la función que devuelve el mensaje para enviar
-        } else if (eleccion == 2) {
+            String[] received = Hamming_emisor.useHammingEmisor(mensaje_binario);
+            if (received[0].equals("-1")) {
+                System.err.println("Error al procesar con Hamming. Terminando programa.");
+                sc.close();
+                return;
+            }
+            fletcherT = Integer.parseInt(received[0]); // tipo de hamming (siempre 1)
+            toSend = received[1]; // mensaje + bits de paridad
+        } else if (eleccion == 2) { // Fletcher
             String[] received = checksum_emisor.useChecksumEmisor(mensaje_binario);
             fletcherT = Integer.parseInt(received[0]); // tipo de fletcher checksum a usar
             toSend = received[1]; // mensaje + checksum

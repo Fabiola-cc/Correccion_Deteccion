@@ -205,5 +205,92 @@ def extraer_mensaje_original(mensaje_completo, posiciones_paridad):
     
     return mensaje_original
 
+def procesar_hamming_receptor(mensaje_recibido):
+    """
+    Usa las funciones existentes de Hamming_receptor.py
+    Retorna (hay_error, mensaje_original, fue_corregido)
+    """
+    import io
+    import sys
+    from contextlib import redirect_stdout
+    
+    print(f"Procesando mensaje con Hamming: {mensaje_recibido}")
+    
+    longitud_total = len(mensaje_recibido)
+    cantidad_paridad = calcular_bits_paridad_en_mensaje(longitud_total)
+    
+    # Identificar posiciones de paridad
+    posiciones_paridad = set()
+    for i in range(cantidad_paridad):
+        posicion = 2 ** i  # 1, 2, 4, 8, 16...
+        if posicion <= longitud_total:
+            posiciones_paridad.add(posicion)
+    
+    # Calcular bits de síndrome
+    bits_sindrome = []
+    
+    for p in range(cantidad_paridad):
+        bit_paridad = 1 << p  # 2^p para verificar el bit correspondiente
+        
+        # Crear lista de bits a evaluar
+        bits_a_evaluar = []
+        
+        for i in range(longitud_total):
+            posicion = i + 1
+            
+            # Incluir todas las posiciones que tengan '1' en el bit correspondiente
+            if (posicion & bit_paridad) != 0:
+                bits_a_evaluar.append(mensaje_recibido[i])
+        
+        # Calcular XOR de todos los bits
+        resultado_xor = '0'
+        for bit in bits_a_evaluar:
+            if resultado_xor == '0':
+                resultado_xor = bit
+            else:
+                # XOR: 0⊕0=0, 0⊕1=1, 1⊕0=1, 1⊕1=0
+                if resultado_xor == bit:
+                    resultado_xor = '0'
+                else:
+                    resultado_xor = '1'
+        
+        bits_sindrome.append(resultado_xor)
+    
+    # Determinar si hay errores
+    sindrome_decimal = calcular_sindrome_decimal(bits_sindrome)
+    
+    print(f"Síndrome en decimal: {sindrome_decimal}")
+    
+    # Procesar según el síndrome
+    if sindrome_decimal == 0:
+        # No se detectaron errores
+        print("✅ NO SE DETECTARON ERRORES")
+        mensaje_original = extraer_mensaje_original(mensaje_recibido, posiciones_paridad)
+        return False, mensaje_original, False
+        
+    elif sindrome_decimal <= longitud_total:
+        # Se detectó y se puede corregir 1 error
+        print(f"⚠️ SE DETECTÓ Y CORRIGIÓ 1 ERROR en posición: {sindrome_decimal}")
+        
+        # Corregir el error
+        mensaje_corregido = list(mensaje_recibido)
+        if mensaje_corregido[sindrome_decimal - 1] == '0':
+            mensaje_corregido[sindrome_decimal - 1] = '1'
+        else:
+            mensaje_corregido[sindrome_decimal - 1] = '0'
+        
+        mensaje_corregido_str = ''.join(mensaje_corregido)
+        
+        # Extraer mensaje original sin bits de paridad
+        mensaje_original = extraer_mensaje_original(mensaje_corregido_str, posiciones_paridad)
+        return False, mensaje_original, True  # No hay error después de corrección
+        
+    else:
+        # Se detectaron múltiples errores (no se puede corregir)
+        print(f"❌ SE DETECTARON MÚLTIPLES ERRORES")
+        print(f"El mensaje se descarta por detectar errores no corregibles.")
+        return True, "", False
+
+
 if __name__ == "__main__":
     main()

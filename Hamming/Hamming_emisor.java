@@ -1,3 +1,4 @@
+package Hamming;
 /*
  * Algoritmo de Hamming - Emisor
  * 1. Solicitamos el mensaje binario al usuario (ejemplo: "01010101")
@@ -21,10 +22,175 @@
  * 16. Reemplazamos cada P1, P2, P3... de la matriz columna 0 con los resultados finales
  */
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.Stack;
 
 public class Hamming_emisor {
+      
+    /**
+     * Solicita un mensaje binario válido al usuario
+     * Valida que solo contenga '0' y '1'
+     */
+    private static String solicitarMensaje(Scanner scanner) {
+        String mensaje;
+        do {
+            System.out.print("Ingrese el mensaje binario: ");
+            mensaje = scanner.nextLine().trim();
+            
+            if (!esMensajeBinarioValido(mensaje)) {
+                System.out.println("Error: El mensaje debe contener solo '0' y '1'. Intente nuevamente.");
+            }
+        } while (!esMensajeBinarioValido(mensaje));
+        
+        return mensaje;
+    }
     
+    /**
+     * Valida que el mensaje solo contenga caracteres binarios ('0' y '1')
+     */
+    private static boolean esMensajeBinarioValido(String mensaje) {
+        if (mensaje.isEmpty()) {
+            return false;
+        }
+        
+        for (char c : mensaje.toCharArray()) {
+            if (c != '0' && c != '1') {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Calcula la cantidad de bits de paridad necesarios
+     * Usando la fórmula: ceil(ln(longitudMensaje + bitsParidad)/ln(2))
+     * Resolvemos: 2^p >= m + p + 1
+     */
+    private static int calcularBitsParidad(int longitudMensaje) {
+        // ceil(log2(longitudMensaje + bitsParidad))
+        // Necesitamos resolver: 2^p >= m + p + 1
+        int p = 0;
+        while (Math.pow(2, p) < longitudMensaje + p + 1) {
+            p++;
+        }
+        return p;
+    }
+
+    /**
+     * Genera el código de Hamming para un mensaje binario dado
+     * Sin interacción del usuario - para uso en conexiones de red
+     */
+    private static String generarCodigoHamming(String mensaje) {
+        // Paso 2: Sacamos el número total de bits en el mensaje
+        int longitudMensaje = mensaje.length();
+        
+        // Paso 3: Calculamos los bits de paridad
+        int cantidadParidad = calcularBitsParidad(longitudMensaje);
+        int m = longitudMensaje + cantidadParidad; // Total de bits
+        
+        // Paso 4: Creamos una matriz de m×2
+        String[][] matriz = new String[m][2];
+        
+        // Paso 5: Colocamos los números de 1-m en la columna 1
+        for (int i = 0; i < m; i++) {
+            matriz[i][1] = String.valueOf(i + 1);
+        }
+        
+        // Paso 6: En la columna 0 apartamos los espacios 2^n para P1, P2, P3...
+        Set<Integer> posicionesParidad = new HashSet<>();
+        for (int i = 0; i < cantidadParidad; i++) {
+            int posicion = (int) Math.pow(2, i); // 2^0=1, 2^1=2, 2^2=4, 2^3=8...
+            posicionesParidad.add(posicion);
+            matriz[posicion - 1][0] = "P" + (i + 1); // P1, P2, P3, etc.
+        }
+        
+        // Paso 7: En los espacios restantes colocamos el mensaje original
+        int indiceMensaje = 0;
+        for (int i = 0; i < m; i++) {
+            int posicion = i + 1;
+            if (!posicionesParidad.contains(posicion)) {
+                matriz[i][0] = String.valueOf(mensaje.charAt(indiceMensaje));
+                indiceMensaje++;
+            }
+        }
+        
+        // Paso 8-16: Calculamos cada bit de paridad
+        for (int p = 0; p < cantidadParidad; p++) {
+            int posicionParidad = (int) Math.pow(2, p);
+            int bitParidad = 1 << p; // 2^p para verificar el bit correspondiente
+            
+            // Creamos stack para esta paridad
+            Stack<Character> stack = new Stack<>();
+            
+            for (int i = 0; i < m; i++) {
+                int posicion = i + 1;
+                
+                // No incluir posiciones de paridad y verificar si tiene '1' en la posición correcta
+                if (!posicionesParidad.contains(posicion) && (posicion & bitParidad) != 0) {
+                    stack.push(matriz[i][0].charAt(0));
+                }
+            }
+            
+            // Calculamos XOR de todos los elementos del stack
+            char resultado = '0';
+            while (!stack.isEmpty()) {
+                char bit = stack.pop();
+                if (resultado == '0') {
+                    resultado = bit;
+                } else {
+                    // XOR: 0⊕0=0, 0⊕1=1, 1⊕0=1, 1⊕1=0
+                    if (resultado == bit) {
+                        resultado = '0';
+                    } else {
+                        resultado = '1';
+                    }
+                }
+            }
+            
+            // Reemplazamos Px en la matriz con el resultado final
+            matriz[posicionParidad - 1][0] = String.valueOf(resultado);
+        }
+        
+        // Generar palabra código completa
+        StringBuilder palabraCodigo = new StringBuilder();
+        for (int i = 0; i < m; i++) {
+            palabraCodigo.append(matriz[i][0]);
+        }
+        
+        return palabraCodigo.toString();
+    }
+
+    /**
+     * Función equivalente a useChecksumEmisor pero para Hamming
+     * Retorna un array con [tipo_hamming, mensaje_con_bits_paridad]
+     * Para compatibilidad, tipo_hamming siempre será "1" (Hamming estándar)
+     */
+    public static String[] useHammingEmisor(String mensaje) {
+        System.out.println("\nUsando algoritmo de Hamming para corrección de errores.");
+        
+        if (!esMensajeBinarioValido(mensaje)) {
+            System.err.println("Error: El mensaje debe ser binario.");
+            return new String[] { "-1" };
+        }
+
+        // Generar código de Hamming
+        String mensajeConParidad = generarCodigoHamming(mensaje);
+        
+        int longitudMensaje = mensaje.length();
+        int cantidadParidad = calcularBitsParidad(longitudMensaje);
+        
+        System.out.println("Mensaje original: " + mensaje);
+        System.out.println("Bits de datos: " + longitudMensaje);
+        System.out.println("Bits de paridad añadidos: " + cantidadParidad);
+        System.out.println("Mensaje con bits de paridad: " + mensajeConParidad);
+        
+        // Retornar tipo "1" (Hamming estándar) y mensaje con bits de paridad
+        return new String[] { "1", mensajeConParidad };
+    }
+
     public static void main(String[] args) {
         // Paso 1: Solicitamos el mensaje binario al usuario
         Scanner scanner = new Scanner(System.in);
@@ -161,60 +327,5 @@ public class Hamming_emisor {
         System.out.println(palabraCodigo.toString());
         
         scanner.close();
-    }
-    
-    /**
-     * Solicita un mensaje binario válido al usuario
-     * Valida que solo contenga '0' y '1'
-     */
-    private static String solicitarMensaje(Scanner scanner) {
-        String mensaje;
-        do {
-            System.out.print("Ingrese el mensaje binario: ");
-            mensaje = scanner.nextLine().trim();
-            
-            if (!esMensajeBinarioValido(mensaje)) {
-                System.out.println("Error: El mensaje debe contener solo '0' y '1'. Intente nuevamente.");
-            }
-        } while (!esMensajeBinarioValido(mensaje));
-        
-        return mensaje;
-    }
-    
-    /**
-     * Valida que el mensaje solo contenga caracteres binarios ('0' y '1')
-     */
-    private static boolean esMensajeBinarioValido(String mensaje) {
-        if (mensaje.isEmpty()) {
-            return false;
-        }
-        
-        for (char c : mensaje.toCharArray()) {
-            if (c != '0' && c != '1') {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Calcula la cantidad de bits de paridad necesarios
-     * Usando la fórmula: ceil(ln(longitudMensaje + bitsParidad)/ln(2))
-     * Resolvemos: 2^p >= m + p + 1
-     */
-    private static int calcularBitsParidad(int longitudMensaje) {
-    /**
-     * Calcula la cantidad de bits de paridad necesarios
-     * Usando la fórmula: ceil(ln(longitudMensaje + bitsParidad)/ln(2))
-     * Resolvemos: 2^p >= m + p + 1
-     */
-        // ceil(log2(longitudMensaje + bitsParidad))
-        // Necesitamos resolver: 2^p >= m + p + 1
-        int p = 0;
-        while (Math.pow(2, p) < longitudMensaje + p + 1) {
-            p++;
-        }
-        return p;
     }
 }
