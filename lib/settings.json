@@ -1,0 +1,12 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar"
+    ],
+    "java.test.config": {
+        "name": "myConfiguration",
+        "workingDirectory": "${workspaceFolder}",
+        "args": [],
+        "vmargs": [],
+        "env": {}
+    }
+}

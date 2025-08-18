@@ -1,5 +1,6 @@
+
 import FletcherChecksum.checksum_emisor;
-import Hamming.Hamming_emisor; // Importar la clase de Hamming
+import Hamming.Hamming_emisor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
